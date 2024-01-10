@@ -10,5 +10,8 @@
     "reddit-parser"
   ],
   "author": "Khrystyna Derenivska",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "node-cron": "^3.0.3"
+  }
 }
