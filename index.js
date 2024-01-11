@@ -11,7 +11,6 @@ const puppeteer = require("puppeteer");
   await getLinks(page, allLinks);
   await scrollAndFind(page, allLinks);
   await page.waitForTimeout(2000);
-  console.log("all links", allLinks);
 
   await browser.close();
 })();
@@ -28,7 +27,6 @@ async function scrollAndFind(page, allLinks) {
   ) {
     await page.evaluate((y) => {
       document.scrollingElement.scrollBy(0, y);
-      console.log("scrolled");
     }, distance);
     await getLinks(page, allLinks);
     await page.waitForTimeout(delay);
@@ -42,4 +40,5 @@ async function getLinks(page, allLinks) {
     links.map((link) => link.href)
   );
   allLinks = allLinks.concat(...postLinks);
+  console.log("all links", allLinks);
 }
