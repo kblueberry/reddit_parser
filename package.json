@@ -1,7 +1,7 @@
 {
   "name": "reddit_parser",
   "version": "1.0.0",
-  "description": "configurable cron scheduler for parsing Reddit posts",
+  "description": "parsing of reddit posts",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -11,7 +11,5 @@
   ],
   "author": "Khrystyna Derenivska",
   "license": "MIT",
-  "dependencies": {
-    "node-cron": "^3.0.3"
-  }
+  "dependencies": {}
 }
