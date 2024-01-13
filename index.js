@@ -1,21 +1,35 @@
 const puppeteer = require("puppeteer");
+const fs = require("fs");
 
 (async () => {
-  let allLinks = [];
   const browser = await puppeteer.launch({
     headless: false,
     defaultViewport: null,
   });
   const page = await browser.newPage();
   await page.goto("https://www.reddit.com/r/Breadit/");
-  await getLinks(page, allLinks);
-  await scrollAndFind(page, allLinks);
-  await page.waitForTimeout(2000);
 
+  // search and write results to .txt file
+  await searchAndSave(page);
+
+  // await getLinks(page, allLinks);
+  // await scrollAndFind(page, allLinks);
+  // await page.waitForTimeout(2000);
   await browser.close();
 })();
 
-async function scrollAndFind(page, allLinks) {
+async function searchAndSave(page) {
+  const searchInputSelector = "faceplate-search-input",
+    searchResultSelector = "a.absolute.inset-0";
+
+  await page.type(searchInputSelector, "rye sourdough");
+  await page.waitForSelector(searchResultSelector);
+  let allLinks = [];
+
+  await getResultsOnScroll(page, allLinks, searchResultSelector);
+}
+
+async function getResultsOnScroll(page, results, resultsSelector) {
   const distance = 100;
   const delay = 100;
   while (
@@ -28,17 +42,19 @@ async function scrollAndFind(page, allLinks) {
     await page.evaluate((y) => {
       document.scrollingElement.scrollBy(0, y);
     }, distance);
-    await getLinks(page, allLinks);
+    await getLinks(page, results, resultsSelector);
     await page.waitForTimeout(delay);
   }
 }
 
-async function getLinks(page, allLinks) {
-  await page.waitForSelector('a[slot="full-post-link"]');
+async function getLinks(page, results, selector) {
+  await page.waitForSelector(selector);
 
-  const postLinks = await page.$$eval('a[slot="full-post-link"]', (links) =>
-    links.map((link) => link.href)
+  const postLinks = await page.$$eval(selector, (links) =>
+    links.map((link) => {
+      return { title: link.textContent, href: link.href };
+    })
   );
-  allLinks = allLinks.concat(...postLinks);
-  console.log("all links", allLinks);
+  results = results.concat(...postLinks);
+  console.log("all links", results);
 }
