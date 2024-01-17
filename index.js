@@ -1,5 +1,4 @@
 const puppeteer = require("puppeteer");
-const fs = require("fs");
 
 (async () => {
   const browser = await puppeteer.launch({
@@ -18,11 +17,51 @@ const fs = require("fs");
   await browser.close();
 })();
 
-async function searchAndSave(page) {
-  const searchInputSelector = "faceplate-search-input",
-    searchResultSelector = "a.absolute.inset-0";
+async function typeInInput(inputElement) {
+  inputElement.setAttribute("type", "text");
 
-  await page.type(searchInputSelector, "rye sourdough");
+  inputElement.focus();
+  inputElement.value = "";
+  const numberString = "Some Text";
+  for (let i = 0; i < numberString.length; i++) {
+    const digit = numberString[i];
+
+    const keyboardEvent = new KeyboardEvent("keydown", { key: digit });
+    inputElement.dispatchEvent(keyboardEvent);
+
+    inputElement.value += digit;
+
+    const inputEvent = new InputEvent("input", {
+      inputType: "insertText",
+      data: digit,
+    });
+    inputElement.dispatchEvent(inputEvent);
+
+    const changeEvent = new Event("change");
+    inputElement.dispatchEvent(changeEvent);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+}
+
+async function searchAndSave(page) {
+  const searchResultSelector = "a.absolute.inset-0";
+
+  // await page.type(
+  //   "body >>> input[placeholder='Search in r/Breadit']",
+  //   "My love"
+  // );
+
+  const inputSearch = await page.waitForSelector(
+    "body >>> input[placeholder='Search in r/Breadit']"
+  );
+
+  console.log("input: ", inputSearch);
+  await inputSearch.type("test");
+
+  console.log("pp");
+  // await page.type(searchInputSelector, "rye sourdough");
+
   await page.waitForSelector(searchResultSelector);
   let allLinks = [];
 
@@ -52,9 +91,9 @@ async function getLinks(page, results, selector) {
 
   const postLinks = await page.$$eval(selector, (links) =>
     links.map((link) => {
-      return { title: link.textContent, href: link.href };
+      return { href: link.href };
     })
   );
+  console.log("results", results);
   results = results.concat(...postLinks);
-  console.log("all links", results);
 }
