@@ -1,15 +1,12 @@
 const puppeteer = require("puppeteer");
 
 (async () => {
-  const browser = await puppeteer.launch({
-    headless: false,
-    defaultViewport: null,
-  });
+  const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
-  await page.goto("https://www.reddit.com/r/Breadit/");
+  await page.goto("https://www.reddit.com/r/Breadit/search/?q=rye%20bread");
 
   // search and write results to .txt file
-  await searchAndSave(page);
+  await searchAndSave2(page);
 
   // await getLinks(page, allLinks);
   // await scrollAndFind(page, allLinks);
@@ -17,60 +14,63 @@ const puppeteer = require("puppeteer");
   await browser.close();
 })();
 
-async function typeInInput(inputElement) {
-  inputElement.setAttribute("type", "text");
+async function searchAndSave2(page) {
+  let allLinks = [];
 
-  inputElement.focus();
-  inputElement.value = "";
-  const numberString = "Some Text";
-  for (let i = 0; i < numberString.length; i++) {
-    const digit = numberString[i];
+  const searchResultsLinks = await page.$$eval(
+    'body >>> a[data-testid="post-title"]',
+    (elements) => elements.map((el) => el.href)
+  );
 
-    const keyboardEvent = new KeyboardEvent("keydown", { key: digit });
-    inputElement.dispatchEvent(keyboardEvent);
-
-    inputElement.value += digit;
-
-    const inputEvent = new InputEvent("input", {
-      inputType: "insertText",
-      data: digit,
-    });
-    inputElement.dispatchEvent(inputEvent);
-
-    const changeEvent = new Event("change");
-    inputElement.dispatchEvent(changeEvent);
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
+  allLinks = allLinks.concat(searchResultsLinks);
+  console.log("links results", allLinks, allLinks.length);
+  // await getResultsOnScroll(
+  //   page,
+  //   allLinks,
+  //   'body >>> a[data-testid="post-title"]'
+  // );
 }
 
 async function searchAndSave(page) {
-  const searchResultSelector = "a.absolute.inset-0";
+  const inputSelector = "body >>> input[placeholder='Search in r/Breadit']";
 
-  // await page.type(
-  //   "body >>> input[placeholder='Search in r/Breadit']",
-  //   "My love"
+  const elementHandle = await page.waitForSelector(inputSelector);
+  // await page.focus(inputSelector);
+  const searchButton = await page.waitForSelector("body >>> span.leadingIcon");
+  console.log(searchButton);
+  await page.evaluate((el) => el.click(), searchButton);
+
+  // await page.$eval(inputSelector, (el) => (el.value = "rye"));
+  await page.keyboard.type("Enter");
+
+  console.log("input: ", elementHandle);
+  // console.log(
+  //   "value after type",
+  //   await page.evaluate((element) => element.value, elementHandle)
   // );
 
-  const inputSearch = await page.waitForSelector(
-    "body >>> input[placeholder='Search in r/Breadit']"
-  );
+  // const searchResults = await page.$('body >>> a[data-testid="post-title"]');
+  // console.log("page results: ", searchResults);
 
-  console.log("input: ", inputSearch);
-  await inputSearch.type("test");
-
-  console.log("pp");
+  // console.log("search res: ", searchResults);
   // await page.type(searchInputSelector, "rye sourdough");
 
-  await page.waitForSelector(searchResultSelector);
-  let allLinks = [];
+  // const resultsOfSearch = await page.waitForSelector(
+  //   'a[data-testid="post-title"]'
+  // );
+  // console.log("res: ", resultsOfSearch);
+  // let allLinks = [];
 
-  await getResultsOnScroll(page, allLinks, searchResultSelector);
+  // await getResultsOnScroll(
+  //   page,
+  //   allLinks,
+  //   'body >>> a[data-testid="post-title"]'
+  // );
 }
 
 async function getResultsOnScroll(page, results, resultsSelector) {
-  const distance = 100;
-  const delay = 100;
+  const distance = await page.evaluate(() => window.innerHeight);
+  const delay = 1000;
   while (
     await page.evaluate(
       () =>
@@ -94,6 +94,6 @@ async function getLinks(page, results, selector) {
       return { href: link.href };
     })
   );
-  console.log("results", results);
+  console.log("results", results, results.length);
   results = results.concat(...postLinks);
 }
