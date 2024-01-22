@@ -1,4 +1,5 @@
 const puppeteer = require("puppeteer");
+const fs = require("fs");
 
 (async () => {
   const browser = await puppeteer.launch({ headless: false });
@@ -69,5 +70,6 @@ async function getLinks(page, results, selector) {
     })
   );
   results = results.concat(...postLinks);
+  fs.writeFileSync("text.json", JSON.stringify(results));
   console.log("results", results, results.length);
 }
