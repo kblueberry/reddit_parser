@@ -9,9 +9,6 @@ const fs = require("fs");
   // search and write results to .txt file
   await searchAndSave(page);
 
-  // await getLinks(page, allLinks);
-  // await scrollAndFind(page, allLinks);
-  // await page.waitForTimeout(2000);
   await browser.close();
 })();
 
